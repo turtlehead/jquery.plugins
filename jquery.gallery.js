@@ -225,7 +225,6 @@
 			if (!this.is_loading) {
 				var oslide = this.curr_slide;
 				if (!("img" in nslide)) {
-					this.is_loading = true;
 					this._startLoading();
 					nslide.img = $('<img class="slide">')
 						.css({
@@ -235,15 +234,13 @@
 						})
 						.hide()
 						.load($.proxy(function(){
-							this.is_loading = false;
 							this._stopLoading();
 							this._changeSlide(this.curr_slide, nslide);
 						}, this))
 						.error(function(){
-							this.is_loading = false;
 							nslide.error = true;
 							this._stopLoading();
-							// error
+							$.error("error loading image!");
 						})
 						.attr("src", nslide.image);
 					this.slideholder.append(nslide.img);
@@ -286,11 +283,13 @@
 
 		_startLoading: function() {
 			$("#g-loader").show();
+			this.is_loading = true;
 			this.pause_thumbs = true;
 		},
 
 		_stopLoading: function() {
 			$("#g-loader").hide();
+			this.is_loading = false;
 			this.pause_thumbs = false;
 		},
 
