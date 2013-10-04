@@ -163,7 +163,7 @@
 					.load($.proxy(function() {
 						if (this.thumbs_visible) {
 							this.thumbscroller.perfectScrollbar('update');
-							this.slideshow[index].thumb[0].scrollIntoView();
+							this.curr_slide.thumb[0].scrollIntoView();
 						}
 						if (index < this.slideshow.length) {
 							setTimeout($.proxy(this._loadThumbs, this), 0, ++index);
