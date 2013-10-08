@@ -207,6 +207,7 @@
 							}[m];
 						}, this));
 			this.options.container.find('.pagedisplay').text(pager_text);
+			this.element.trigger("updateComplete");
 		},
 
 		_notthis: function(data, exception) {
