@@ -8,7 +8,6 @@
 			ws_msg: null,
 			size: 10,
 			filter: true,
-			sticky: true,
 			filter_startsWith: false,
 			filter_ignoreCase: true,
 			sort_list: [[0, 0]],
@@ -16,6 +15,16 @@
 		},
 
 		_create: function() {
+			if (this.options.filter) {
+				var filters = $('<tr class="filter"/>');
+				this.element.find('thead th').each(function(i, v) {
+					filters.append('<th><input type="text" /></th>');
+				});
+				this.element.find('thead').append(filters);
+			}
+			this.element.find('tr.filter input').keypress($.proxy(function() {
+				this._getWS();
+			}, this));
 			
 			this._establishWS();
 		},
@@ -55,7 +64,7 @@
 				this.options.size = e.target.value;
 				this._getWS();
 			}, this));
-			this.element.find('th').click($.proxy(function(e) {
+			this.element.find('tr.header th').click($.proxy(function(e) {
 				if (e.ctrlKey) {
 					var found = false, i, len = this.options.sort_list.length;
 					for (i = 0; i < len; i++) {
@@ -96,7 +105,7 @@
 		},
 
 		_getWS: function() {
-			var filters = $.makeArray($(this).find('thead').eq(0).children('tr').find('select.tablesorter-filter, input.tablesorter-filter').map(function() {
+			var filters = $.makeArray(this.element.find('tr.filter input').map(function() {
 				return $(this).val() || '';
 			}));
 			if (this.options.container.find('.pagesize').val() == 'Auto') {
@@ -122,19 +131,19 @@
 			if (col) {
 				var startpct = (typeof this.options.filter_startsWith != 'undefined' && this.options.filter_startsWith === true) ? "" : "%";
 				col = '"' + col[1] + '":{';
-				var comma = '';
+				var comma = '',
+					ignore_case = this.options.filter_ignoreCase;
 				$.each(filters, function(i,v) {
 					if (v != '') {
 						col = col + comma + '"' + i + '":{';
 						col = col + '"filter":"' + startpct + v + '%"';
-						col = col + ',"nocase":' + this.options.filter_ignoreCase + '}';
+						col = col + ',"nocase":' + ignore_case + '}';
 						comma = ',';
 					}
 				});
 				col = col + '}';
 				msg = msg.replace(/(\{filterList[\s+]?:[\s+]?.*?\})/g, col);
 			}
-
 			if ( msg !== '' ) {
 				if (this.wsocket == null) {
 					this._establishWS();
