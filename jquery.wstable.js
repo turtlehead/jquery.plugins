@@ -7,6 +7,8 @@
 			ws_url: null,
 			ws_msg: null,
 			size: 10,
+			filter: true,
+			sticky: true,
 			filter_startsWith: false,
 			filter_ignoreCase: true,
 			sort_list: [[0, 0]],
@@ -97,10 +99,14 @@
 			var filters = $.makeArray($(this).find('thead').eq(0).children('tr').find('select.tablesorter-filter, input.tablesorter-filter').map(function() {
 				return $(this).val() || '';
 			}));
+			if (this.options.container.find('.pagesize').val() == 'Auto') {
+				// this should be a calculated maximum possible visible rows value
+				this.options.size = 50;
+			}
 			var msg = (this.options.ws_msg) ? this.options.ws_msg.replace(/\{page\}/g, this.page).replace(/\{size\}/g, this.options.size) : '',
-			arry = [],
-			sl = this.options.sort_list,
-			col = msg.match(/\{sortList[\s+]?:[\s+]?(.*?)\}/);
+				arry = [],
+				sl = this.options.sort_list,
+				col = msg.match(/\{sortList[\s+]?:[\s+]?(.*?)\}/);
 			if (col) {
 				col = '"' + col[1] + '":{';
 				var comma = '';
@@ -138,19 +144,45 @@
 		},
 
 		_renderWS: function(data, exception) {
+			this.element.children('tbody').empty();
 			var result = this.options.ajaxProcessing(data) || [ 0, [], [] ],
 				rows = result[1] || [],
 				headers = result[2] || [],
-				len = rows.length, rowlen, i, j, tds = '';
+				len = rows.length, rowlen, i, j, tds = '',
+				automode = this.options.container.find('.pagesize').val() == 'Auto',
+				height = $(window).height();
 			for (i = 0; i < len; i++) {
+				var trow = "<tr class='"+(i%2==0?"even":"odd")+"'>";
+				rowlen = rows[i].length;
+				for (j = 0; j < rowlen; j++) {
+					var match = rows[i][j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
+					if (match !== null)
+						trow += '<td ' + match[1] + '="' + match[2] + '">' + match[3] + '</td>';
+					else
+						trow += '<td>' + rows[i][j] + '</td>';
+				}
+				trow += "</tr>";
+				this.element.children('tbody').append(trow);
+				if (automode) {
+					if ((this.element.height() + this.options.container.height()) >= height) {
+						while ((this.element.height() + this.options.container.height()) >= height) {
+							this.element.children('tbody').children('tr').filter(':last').remove();
+							i--;
+						}
+						this.options.size = i;
+						break;
+					}
+				}
+
+/*
 				tds += '<tr class="' + (i % 2 == 1 ? "odd" : "even") + '">';
 				rowlen = rows[i].length;
 				for (j = 0; j < rowlen; j++) {
 					tds += '<td>' + rows[i][j] + '</td>';
 				}
 				tds += '</tr>';
-			}
-			this.element.children('tbody').html(tds);
+*/			}
+//			this.element.children('tbody').html(tds);
 
 			this.total_rows = result[0];
 			this.total_pages = Math.ceil(this.total_rows / this.options.size);
