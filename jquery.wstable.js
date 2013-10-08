@@ -143,7 +143,7 @@
 				headers = result[2] || [],
 				len = rows.length, rowlen, i, j, tds = '';
 			for (i = 0; i < len; i++) {
-				tds += '<tr>';
+				tds += '<tr class="' + (i % 2 == 1 ? "odd" : "even") + '">';
 				rowlen = rows[i].length;
 				for (j = 0; j < rowlen; j++) {
 					tds += '<td>' + rows[i][j] + '</td>';
