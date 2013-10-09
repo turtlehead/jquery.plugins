@@ -18,13 +18,11 @@
 			if (this.options.filter) {
 				var filters = $('<tr class="filter"/>');
 				this.element.find('thead th').each(function(i, v) {
-					filters.append('<th><input type="text" /></th>');
+					var filter = $('<th class="filter">').append('<input type="search">');
+					filters.append(filter);
 				});
 				this.element.find('thead').append(filters);
 			}
-			this.element.find('tr.filter input').keypress($.proxy(function() {
-				this._getWS();
-			}, this));
 			
 			this._establishWS();
 		},
@@ -84,6 +82,12 @@
 						this.options.sort_list = [[e.target.cellIndex, 0]];
 					}
 				}
+				this._getWS();
+			}, this));
+			this.element.find('tr.filter input').on('keyup', $.proxy(function() {
+				this._getWS();
+			}, this));
+			this.element.find('tr.filter input').on('search', $.proxy(function() {
 				this._getWS();
 			}, this));
 		},
