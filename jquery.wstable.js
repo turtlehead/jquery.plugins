@@ -18,7 +18,8 @@
 			if (this.options.filter) {
 				var filters = $('<tr class="filter"/>');
 				this.element.find('thead th').each(function(i, v) {
-					var filter = $('<th class="filter">').append('<input type="search">');
+					$(v).append('<img class="wstable-sort none">');
+					var filter = $('<th>').append('<input type="search">');
 					filters.append(filter);
 				});
 				this.element.find('thead').append(filters);
@@ -62,34 +63,16 @@
 				this.options.size = e.target.value;
 				this._getWS();
 			}, this));
-			this.element.find('tr.header th').click($.proxy(function(e) {
-				if (e.ctrlKey) {
-					var found = false, i, len = this.options.sort_list.length;
-					for (i = 0; i < len; i++) {
-						if (this.options.sort_list[i][0] == e.target.cellIndex) {
-							found = true;
-							this.options.sort_list[i][1] = this.options.sort_list[i][1] == 1 ? 0 : 1;
-							break;
-						}
-					}
-					if (!found) {
-						this.options.sort_list.push([e.target.cellIndex, 0]);
-					}
-				} else {
-					if (this.options.sort_list[0][0] == e.target.cellIndex) {
-						this.options.sort_list = [[e.target.cellIndex, this.options.sort_list[0][1] == 1 ? 0 : 1]];
-					} else {
-						this.options.sort_list = [[e.target.cellIndex, 0]];
-					}
-				}
-				this._getWS();
-			}, this));
+			this.element.find('tr.header th').click($.proxy(this._onSortTable, this));
+
 			this.element.find('tr.filter input').on('keyup', $.proxy(function() {
 				this._getWS();
 			}, this));
 			this.element.find('tr.filter input').on('search', $.proxy(function() {
 				this._getWS();
 			}, this));
+
+			this._setSortIcons();
 		},
 
 		_establishWS: function() {
@@ -267,6 +250,45 @@
 			updatePageDisplay(table, c);
 			fixHeight(table, c);
 			if (c.initialized) { $t.trigger('pagerChange', c); }
+		},
+
+		_setSortIcons: function() {
+			this.element.find('.wstable-sort').removeClass('asc desc');
+			this.element.find('.wstable-sort').addClass('none');
+			$.each(this.options.sort_list, $.proxy(function(i, v) {
+				this.element.find('.wstable-sort:eq(' + v[0] + ')').addClass(v[1] == 1 ? 'asc' : 'desc');
+			}, this));
+		},
+
+		_onSortTable: function(e) {
+			var target = $(e.target).find('img'),
+				index = e.target.cellIndex;
+			if (target.length == 0) {
+				target = $(e.target);
+				index = e.target.parentElement.cellIndex;
+			}
+
+			if (e.ctrlKey) {
+				var found = false, i, len = this.options.sort_list.length;
+				for (i = 0; i < len; i++) {
+					if (this.options.sort_list[i][0] == index) {
+						found = true;
+						this.options.sort_list[i][1] = 1 - this.options.sort_list[i][1];
+						target.removeClass('asc desc').addClass(this.options.sort_list[i][1] == 1 ? 'asc' : 'desc');
+						break;
+					}
+				}
+				if (!found) {
+					this.options.sort_list.push([index, 0]);
+					target.removeClass('none').addClass('asc');
+				}
+			} else {
+				this.element.find('.wstable-sort').removeClass('asc desc').addClass('none');
+				var sortdir = this.options.sort_list[0][0] == index ? 1 - this.options.sort_list[0][1] : 0;
+				this.options.sort_list = [[index, sortdir]];
+				target.removeClass('none').addClass(sortdir == 1 ? 'asc' : 'desc');
+			}
+			this._getWS();
 		}
 	});
 } (jQuery));
