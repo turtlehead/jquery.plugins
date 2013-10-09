@@ -7,6 +7,7 @@
 			ws_url: null,
 			ws_msg: null,
 			size: 10,
+			autosize: 50,
 			filter: true,
 			filter_startsWith: false,
 			filter_ignoreCase: true,
@@ -34,33 +35,38 @@
 		_init: function() {
 			this.page = 0;
 			this.offset = 0;
+			this.dir = 'last';
 			this.options.size = this.options.container.find('.pagesize').val();
 
 			this.options.container.find('.first').click($.proxy(function() {
-				if (this.page > 0) {
+				if (this.page > 0 || this.offset > 0) {
 					this.page = 0;
 					this.offset = 0;
+					this.dir = 'first';
 					this._getWS();
 				}
 			}, this));
 			this.options.container.find('.last').click($.proxy(function() {
-				if (this.page < this.total_pages - 1) {
+				if (this.page < this.total_pages - 1 || this.offset < this.total_rows) {
 					this.page = this.total_pages - 1;
 					this.offset = this.page * this.options.size;
+					this.dir = 'last';
 					this._getWS();
 				}
 			}, this));
 			this.options.container.find('.prev').click($.proxy(function() {
-				if (this.page > 0) {
+				if (this.page > 0 || this.offset > 0) {
 					this.page--;
-					this.offset -= this.options.size;
+					this.offset -= this.options.container.find('.pagesize').val() == 'Auto' ? this.options.autosize : this.options.size;
+					this.dir = 'first';
 					this._getWS();
 				}
 			}, this));
 			this.options.container.find('.next').click($.proxy(function() {
-				if (this.page < this.total_pages - 1) {
+				if (this.page < this.total_pages - 1 || this.offset < this.total_rows) {
 					this.page++;
-					this.offset += this.options.size;
+					this.offset += 1 * this.options.size;
+					this.dir = 'last';
 					this._getWS();
 				}
 			}, this));
@@ -102,7 +108,7 @@
 			}));
 			if (this.options.container.find('.pagesize').val() == 'Auto') {
 				// this should be a calculated maximum possible visible rows value
-				this.options.size = 50;
+				this.options.size = this.options.autosize;
 			}
 			var msg = (this.options.ws_msg) ? this.options.ws_msg.replace(/\{page\}/g, this.page).replace(/\{size\}/g, this.options.size).replace(/\{offset\}/g, this.offset) : '',
 				arry = [],
@@ -144,33 +150,61 @@
 			}
 		},
 
+		_renderRow: function(i, row, height) {
+			var trow = "<tr class='"+(i%2==0?"even":"odd")+"'>",
+				rowlen = row.length, j;
+			for (j = 0; j < rowlen; j++) {
+				var match = row[j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
+				if (match !== null)
+					trow += '<td ' + match[1] + '="' + match[2] + '">' + match[3] + '</td>';
+				else
+					trow += '<td>' + row[j] + '</td>';
+			}
+			trow += "</tr>";
+			if (this.dir == 'first') {
+				this.element.children('tbody').prepend(trow);
+			} else {
+				this.element.children('tbody').append(trow);
+			}
+
+			if (this.options.container.find('.pagesize').val() == 'Auto') {
+				if ((this.element.height() + this.options.container.height()) >= height) {
+					while ((this.element.height() + this.options.container.height()) >= height) {
+						this.element.children('tbody').children('tr').filter(':' + this.dir).remove();
+						i--;
+					}
+					this.options.size = i;
+					if (this.dir == 'first') {
+						this.offset += this.options.autosize - this.options.size;
+					}
+					return true;
+				}
+			}
+			return false
+		},
+
 		_renderWS: function(data, exception) {
 			this.element.children('tbody').empty();
 			var result = this.options.ajaxProcessing(data) || [ 0, [], [] ],
 				rows = result[1] || [],
 				headers = result[2] || [],
-				len = rows.length, rowlen, i, j, tds = '',
-				automode = this.options.container.find('.pagesize').val() == 'Auto',
-				height = $(window).height();
-			for (i = 0; i < len; i++) {
-				var trow = "<tr class='"+(i%2==0?"even":"odd")+"'>";
-				rowlen = rows[i].length;
-				for (j = 0; j < rowlen; j++) {
-					var match = rows[i][j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
-					if (match !== null)
-						trow += '<td ' + match[1] + '="' + match[2] + '">' + match[3] + '</td>';
-					else
-						trow += '<td>' + rows[i][j] + '</td>';
+				len = rows.length, rowlen, i, j,
+				automode = this.options.container.find('.pagesize').val() == 'Auto';
+
+			if (this.dir == 'first') {
+console.log(this.offset);
+console.log(len);
+console.log(this.options.size);
+console.log(rows);
+//				for (i = len - 1; i >= 0; i--) {
+				for (i = 0; i < len ; i++) {
+					if (this._renderRow(i, rows[49 - i], $(window).height())) {
+						break;
+					}
 				}
-				trow += "</tr>";
-				this.element.children('tbody').append(trow);
-				if (automode) {
-					if ((this.element.height() + this.options.container.height()) >= height) {
-						while ((this.element.height() + this.options.container.height()) >= height) {
-							this.element.children('tbody').children('tr').filter(':last').remove();
-							i--;
-						}
-						this.options.size = i;
+			} else {			
+				for (i = 0; i < len; i++) {
+					if (this._renderRow(i, rows[i], $(window).height())) {
 						break;
 					}
 				}
@@ -183,7 +217,7 @@
 				this.end_row = Math.min(this.start_row + this.options.size, this.total_rows);
 			} else {
 				this.start_row = this.page * this.options.size + 1;
-				this.end_row = Math.min(this.start_row +  this.options.size, this.total_rows)
+				this.end_row = Math.min(this.start_row + (this.options.size - 1), this.total_rows)
 			}
 // disable buttons
 // reset 'All' rownumber
