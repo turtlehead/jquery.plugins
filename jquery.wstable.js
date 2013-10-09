@@ -33,29 +33,34 @@
 
 		_init: function() {
 			this.page = 0;
+			this.offset = 0;
 			this.options.size = this.options.container.find('.pagesize').val();
 
 			this.options.container.find('.first').click($.proxy(function() {
 				if (this.page > 0) {
 					this.page = 0;
+					this.offset = 0;
 					this._getWS();
 				}
 			}, this));
 			this.options.container.find('.last').click($.proxy(function() {
 				if (this.page < this.total_pages - 1) {
 					this.page = this.total_pages - 1;
+					this.offset = this.page * this.options.size;
 					this._getWS();
 				}
 			}, this));
 			this.options.container.find('.prev').click($.proxy(function() {
 				if (this.page > 0) {
 					this.page--;
+					this.offset -= this.options.size;
 					this._getWS();
 				}
 			}, this));
 			this.options.container.find('.next').click($.proxy(function() {
 				if (this.page < this.total_pages - 1) {
 					this.page++;
+					this.offset += this.options.size;
 					this._getWS();
 				}
 			}, this));
@@ -99,7 +104,7 @@
 				// this should be a calculated maximum possible visible rows value
 				this.options.size = 50;
 			}
-			var msg = (this.options.ws_msg) ? this.options.ws_msg.replace(/\{page\}/g, this.page).replace(/\{size\}/g, this.options.size) : '',
+			var msg = (this.options.ws_msg) ? this.options.ws_msg.replace(/\{page\}/g, this.page).replace(/\{size\}/g, this.options.size).replace(/\{offset\}/g, this.offset) : '',
 				arry = [],
 				sl = this.options.sort_list,
 				col = msg.match(/\{sortList[\s+]?:[\s+]?(.*?)\}/);
@@ -169,21 +174,19 @@
 						break;
 					}
 				}
-
-/*
-				tds += '<tr class="' + (i % 2 == 1 ? "odd" : "even") + '">';
-				rowlen = rows[i].length;
-				for (j = 0; j < rowlen; j++) {
-					tds += '<td>' + rows[i][j] + '</td>';
-				}
-				tds += '</tr>';
-*/			}
-//			this.element.children('tbody').html(tds);
+			}
 
 			this.total_rows = result[0];
-			this.total_pages = Math.ceil(this.total_rows / this.options.size);
-			this.start_row = this.page * this.options.size + 1;
-			this.end_row = Math.min((this.page + 1) * this.options.size, this.total_rows);
+			this.total_pages = Math.floor(this.total_rows / this.options.size);
+			if (automode) {
+				this.start_row = this.offset + 1;
+				this.end_row = Math.min(this.start_row + this.options.size, this.total_rows);
+			} else {
+				this.start_row = this.page * this.options.size + 1;
+				this.end_row = Math.min(this.start_row +  this.options.size, this.total_rows)
+			}
+// disable buttons
+// reset 'All' rownumber
 			var pager_text = this.options.pager_msg.replace(/\{(page|filteredRows|filteredPages|totalPages|startRow|endRow|totalRows)\}/gi, $.proxy(function(m){
 							return {
 								'{page}'	: this.page + 1,
@@ -195,61 +198,6 @@
 						}, this));
 			this.options.container.find('.pagedisplay').text(pager_text);
 			this.element.trigger("updateComplete");
-		},
-
-		_notthis: function(data, exception) {
-			var i, j, hsh, $f, $sh,
-			$t = $(table),
-			tc = table.config,
-			$b = $(table.tBodies).filter(':not(.' + tc.cssInfoBlock + ')'),
-			hl = $t.find('thead th').length, tds = '',
-			err = '<tr class="' + tc.selectorRemove + '"><td style="text-align: center;" colspan="' + hl + '">' +
-				(exception ? exception.message + ' (' + exception.name + ')' : 'No rows found') + '</td></tr>',
-			result = c.ajaxProcessing(data) || [ 0, [] ],
-			d = result[1] || [],
-			l = d.length,
-			th = result[2];
-			if ( l > 0 ) {
-				for ( i = 0; i < l; i++ ) {
-					tds += '<tr>';
-					for ( j = 0; j < d[i].length; j++ ) {
-						tds += '<td>' + d[i][j] + '</td>';
-					}
-					tds += '</tr>';
-				}
-			}
-			if ( th && th.length === hl ) {
-				hsh = $t.hasClass('hasStickyHeaders');
-				$sh = $t.find('.' + ((tc.widgetOptions && tc.widgetOptions.stickyHeaders) || 'tablesorter-stickyheader'));
-				$f = $t.find('tfoot tr:first').children();
-				$t.find('th.' + tc.cssHeader).each(function(j){
-					var $t = $(this), icn;
-					if ( $t.find('.' + tc.cssIcon).length ) {
-						icn = $t.find('.' + tc.cssIcon).clone(true);
-						$t.find('.tablesorter-header-inner').html( th[j] ).append(icn);
-						if ( hsh && $sh.length ) {
-							icn = $sh.find('th').eq(j).find('.' + tc.cssIcon).clone(true);
-							$sh.find('th').eq(j).find('.tablesorter-header-inner').html( th[j] ).append(icn);
-						}
-					} else {
-						$t.find('.tablesorter-header-inner').html( th[j] );
-						$sh.find('th').eq(j).find('.tablesorter-header-inner').html( th[j] );
-					}
-					$f.eq(j).html( th[j] );
-				});
-			}
-			if ( exception ) {
-				$t.find('thead').append(err);
-			} else {
-				$b.html(tds);
-			}
-			c.temp.remove();
-			$t.trigger('update');
-			c.totalRows = result[0] || 0;
-			c.totalPages = Math.ceil( c.totalRows / c.size );
-			updatePageDisplay(table, c);
-			fixHeight(table, c);
-			if (c.initialized) { $t.trigger('pagerChange', c); }
 		},
 
 		_setSortIcons: function() {
