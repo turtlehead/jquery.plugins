@@ -7,7 +7,7 @@
 			ws_url: null,
 			ws_msg: null,
 			size: 10,
-			autosize: 50,
+			autosize: 35,
 			filter: true,
 			filter_startsWith: false,
 			filter_ignoreCase: true,
@@ -36,6 +36,7 @@
 			this.page = 0;
 			this.offset = 0;
 			this.dir = 'last';
+			this.clear = false;
 			this.options.size = this.options.container.find('.pagesize').val();
 
 			this.options.container.find('.first').click($.proxy(function() {
@@ -43,14 +44,16 @@
 					this.page = 0;
 					this.offset = 0;
 					this.dir = 'first';
+					this.clear = true;
 					this._getWS();
 				}
 			}, this));
 			this.options.container.find('.last').click($.proxy(function() {
 				if (this.page < this.total_pages - 1 || this.offset < this.total_rows) {
 					this.page = this.total_pages - 1;
-					this.offset = this.page * this.options.size;
+					this.offset = this.total_rows - (this.options.container.find('.pagesize').val() == 'Auto' ? this.options.autosize : this.options.size);
 					this.dir = 'last';
+					this.clear = true;
 					this._getWS();
 				}
 			}, this));
@@ -59,6 +62,7 @@
 					this.page--;
 					this.offset -= this.options.container.find('.pagesize').val() == 'Auto' ? this.options.autosize : this.options.size;
 					this.dir = 'first';
+					this.clear = false;
 					this._getWS();
 				}
 			}, this));
@@ -67,6 +71,7 @@
 					this.page++;
 					this.offset += 1 * this.options.size;
 					this.dir = 'last';
+					this.clear = false;
 					this._getWS();
 				}
 			}, this));
@@ -154,6 +159,11 @@
 		},
 
 		_renderWS: function(data, exception) {
+			if (this.clear) {
+				this.element.children('tbody').empty();
+				this.dir = this.dir == 'first' ? 'last' : 'first';
+			}
+
 			var result = this.options.ajaxProcessing(data) || [ 0, [], [] ],
 				rows = result[1] || [],
 				len = rows.length, i, j,
@@ -212,7 +222,7 @@
 			this.total_pages = Math.floor(this.total_rows / this.options.size);
 			if (automode) {
 				this.start_row = this.offset + 1;
-				this.end_row = Math.min(this.start_row + this.options.size, this.total_rows) - 1;
+				this.end_row = Math.min(this.offset + this.options.size, this.total_rows);
 			} else {
 				this.start_row = this.page * this.options.size + 1;
 				this.end_row = Math.min(this.start_row + (this.options.size - 1), this.total_rows)
