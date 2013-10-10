@@ -107,8 +107,11 @@
 				return $(this).val() || '';
 			}));
 			if (this.options.container.find('.pagesize').val() == 'Auto') {
-				// this should be a calculated maximum possible visible rows value
-				this.options.size = this.options.autosize;
+				if (this.offset < 0) {
+					this.options.size = this.options.autosize + this.offset;
+				} else {
+					this.options.size = this.options.autosize;
+				}
 			}
 			var msg = (this.options.ws_msg) ? this.options.ws_msg.replace(/\{page\}/g, this.page).replace(/\{size\}/g, this.options.size).replace(/\{offset\}/g, this.offset) : '',
 				arry = [],
@@ -156,7 +159,7 @@
 				len = rows.length, i, j,
 				automode = this.options.container.find('.pagesize').val() == 'Auto',
 				oldrows = this.element.children('tbody').children('tr').size(),
-				height = $(window).height();
+				height = $(window).height(), lastrow;
 
 			for (i = 0; i < len; i++) {
 				var trow = "<tr>",
@@ -170,7 +173,13 @@
 				}
 				trow += "</tr>";
 				if (this.dir == 'first') {
-					this.element.children('tbody').prepend(trow);
+					var newrow = $(trow);
+					if (i == 0) {
+						this.element.children('tbody').prepend(newrow);
+					} else {
+						lastrow.after(newrow);
+					}
+					lastrow = newrow;
 				} else {
 					this.element.children('tbody').append(trow);
 				}
@@ -190,7 +199,7 @@
 			}
 
 			if (this.dir == 'first') {
-				this.offset = (this.offset + this.options.size) - len;
+				this.offset = (this.options.autosize + this.offset) - len;
 			} else {
 			}
 			this.options.size = len + oldrows;
