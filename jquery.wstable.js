@@ -25,6 +25,7 @@
 				});
 				this.element.find('thead').append(filters);
 			}
+			this.options.container.find('.pagesize').prepend(new Option('Auto', 'Auto')).append(new Option('All', this.options.size)).val('Auto');
 			
 			this._establishWS();
 		},
@@ -232,6 +233,7 @@
 			this.element.children('tbody').children('tr').filter(':even').addClass('even');
 			this.element.children('tbody').children('tr').filter(':odd').addClass('odd');
 
+			var old_total_rows = this.total_rows;
 			this.total_rows = result[0];
 			this.total_pages = Math.floor(this.total_rows / this.options.size);
 			if (automode) {
@@ -255,6 +257,9 @@
 			} else {
 				this.options.container.find('.last').removeClass('disabled');
 				this.options.container.find('.next').removeClass('disabled');
+			}
+			if (old_total_rows != this.total_rows) {
+				this.options.container.find('.pagesize').find('option:contains("All")').val(this.total_rows);
 			}
 
 			var pager_text = this.options.pager_msg.replace(/\{(page|filteredRows|filteredPages|totalPages|startRow|endRow|totalRows)\}/gi, $.proxy(function(m){
