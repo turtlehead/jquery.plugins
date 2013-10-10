@@ -39,7 +39,10 @@
 			this.clear = false;
 			this.options.size = this.options.container.find('.pagesize').val();
 
-			this.options.container.find('.first').click($.proxy(function() {
+			this.options.container.find('.first').click($.proxy(function(e) {
+				if ($(e.target).hasClass('disabled')) {
+					return;
+				}
 				if (this.page > 0 || this.offset > 0) {
 					this.page = 0;
 					this.offset = 0;
@@ -48,7 +51,10 @@
 					this._getWS();
 				}
 			}, this));
-			this.options.container.find('.last').click($.proxy(function() {
+			this.options.container.find('.last').click($.proxy(function(e) {
+				if ($(e.target).hasClass('disabled')) {
+					return;
+				}
 				if (this.page < this.total_pages - 1 || this.offset < this.total_rows) {
 					this.page = this.total_pages;
 					this.offset = (this.options.container.find('.pagesize').val() == 'Auto' ? this.total_rows - this.options.autosize : (this.page * this.options.size));
@@ -57,7 +63,10 @@
 					this._getWS();
 				}
 			}, this));
-			this.options.container.find('.prev').click($.proxy(function() {
+			this.options.container.find('.prev').click($.proxy(function(e) {
+				if ($(e.target).hasClass('disabled')) {
+					return;
+				}
 				if (this.page > 0 || this.offset > 0) {
 					this.page--;
 					this.offset -= this.options.container.find('.pagesize').val() == 'Auto' ? this.options.autosize : this.options.size;
@@ -66,7 +75,10 @@
 					this._getWS();
 				}
 			}, this));
-			this.options.container.find('.next').click($.proxy(function() {
+			this.options.container.find('.next').click($.proxy(function(e) {
+				if ($(e.target).hasClass('disabled')) {
+					return;
+				}
 				if (this.page < this.total_pages - 1 || this.offset < this.total_rows) {
 					this.page++;
 					this.offset += 1 * this.options.size;
@@ -229,8 +241,22 @@
 				this.start_row = this.page * this.options.size + 1;
 				this.end_row = Math.min(this.start_row + (this.options.size - 1), this.total_rows)
 			}
-// disable buttons
-// reset 'All' rownumber
+
+			if (this.page == 0) {
+				this.options.container.find('.first').addClass('disabled');
+				this.options.container.find('.prev').addClass('disabled');
+			} else {
+				this.options.container.find('.first').removeClass('disabled');
+				this.options.container.find('.prev').removeClass('disabled');
+			}
+			if (this.page == this.total_pages || this.total_pages == 1 || this.end_row == this.total_rows) {
+				this.options.container.find('.last').addClass('disabled');
+				this.options.container.find('.next').addClass('disabled');
+			} else {
+				this.options.container.find('.last').removeClass('disabled');
+				this.options.container.find('.next').removeClass('disabled');
+			}
+
 			var pager_text = this.options.pager_msg.replace(/\{(page|filteredRows|filteredPages|totalPages|startRow|endRow|totalRows)\}/gi, $.proxy(function(m){
 							return {
 								'{page}'	: this.page + 1,
