@@ -95,6 +95,7 @@
 			this.element.find('tr.header th').click($.proxy(this._onSortTable, this));
 
 			this.element.find('tr.filter input').on('search', $.proxy(function() {
+				this.element.children('tbody').empty();
 				this._getWS();
 			}, this));
 
@@ -179,11 +180,8 @@
 				rows = result[1] || [],
 				len = rows.length, i, j,
 				automode = this.options.container.find('.pagesize').val() == 'Auto',
-				height = $(window).height(), lastrow, oldrows;
-
-			if (result[0] < this.total_rows)
-				tbody.empty();
-			oldrows = tbody.children('tr').size();
+				height = $(window).height(), lastrow,
+				oldrows = tbody.children('tr').size();
 
 			if (!automode) {
 				tbody.empty();
