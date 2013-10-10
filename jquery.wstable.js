@@ -1,5 +1,5 @@
 /*
- *  
+ *
  */
 (function($) {
 	$.widget("acinus.wstable", {
@@ -94,9 +94,6 @@
 			}, this));
 			this.element.find('tr.header th').click($.proxy(this._onSortTable, this));
 
-			this.element.find('tr.filter input').on('keyup', $.proxy(function() {
-				this._getWS();
-			}, this));
 			this.element.find('tr.filter input').on('search', $.proxy(function() {
 				this._getWS();
 			}, this));
@@ -172,8 +169,9 @@
 		},
 
 		_renderWS: function(data, exception) {
+			var tbody = this.element.children('tbody');
 			if (this.clear) {
-				this.element.children('tbody').empty();
+				tbody.empty();
 				this.dir = this.dir == 'first' ? 'last' : 'first';
 			}
 
@@ -181,11 +179,14 @@
 				rows = result[1] || [],
 				len = rows.length, i, j,
 				automode = this.options.container.find('.pagesize').val() == 'Auto',
-				oldrows = this.element.children('tbody').children('tr').size(),
-				height = $(window).height(), lastrow;
+				height = $(window).height(), lastrow, oldrows;
+
+			if (result[0] < this.total_rows)
+				tbody.empty();
+			oldrows = tbody.children('tr').size();
 
 			if (!automode) {
-				this.element.children('tbody').empty();
+				tbody.empty();
 			}
 
 			for (i = 0; i < len; i++) {
@@ -202,24 +203,24 @@
 				if (this.dir == 'first') {
 					var newrow = $(trow);
 					if (i == 0) {
-						this.element.children('tbody').prepend(newrow);
+						tbody.prepend(newrow);
 					} else {
 						lastrow.after(newrow);
 					}
 					lastrow = newrow;
 				} else {
-					this.element.children('tbody').append(trow);
+					tbody.append(trow);
 				}
 			}
 
 			if (automode) {
 				if ((this.element.height() + this.options.container.height()) >= height) {
 					while ((this.element.height() + this.options.container.height()) >= height && oldrows > 0) {
-						this.element.children('tbody').children('tr').filter(this.dir == 'first' ? ':last' : ':first').remove();
+						tbody.children('tr').filter(this.dir == 'first' ? ':last' : ':first').remove();
 						oldrows--;
 					}
 					while ((this.element.height() + this.options.container.height()) >= height) {
-						this.element.children('tbody').children('tr').filter(':' + this.dir).remove();
+						tbody.children('tr').filter(':' + this.dir).remove();
 						len--;
 					}
 				}
@@ -229,9 +230,9 @@
 				this.options.size = len + oldrows;
 			}
 
-			this.element.children('tbody').children('tr').removeClass('odd even');
-			this.element.children('tbody').children('tr').filter(':even').addClass('even');
-			this.element.children('tbody').children('tr').filter(':odd').addClass('odd');
+			tbody.children('tr').removeClass('odd even');
+			tbody.children('tr').filter(':even').addClass('even');
+			tbody.children('tr').filter(':odd').addClass('odd');
 
 			var old_total_rows = this.total_rows;
 			this.total_rows = result[0];
