@@ -150,71 +150,60 @@
 			}
 		},
 
-		_renderRow: function(i, row, height) {
-			var trow = "<tr class='"+(i%2==0?"even":"odd")+"'>",
-				rowlen = row.length, j;
-			for (j = 0; j < rowlen; j++) {
-				var match = row[j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
-				if (match !== null)
-					trow += '<td ' + match[1] + '="' + match[2] + '">' + match[3] + '</td>';
-				else
-					trow += '<td>' + row[j] + '</td>';
-			}
-			trow += "</tr>";
-			if (this.dir == 'first') {
-				this.element.children('tbody').prepend(trow);
-			} else {
-				this.element.children('tbody').append(trow);
-			}
-
-			if (this.options.container.find('.pagesize').val() == 'Auto') {
-				if ((this.element.height() + this.options.container.height()) >= height) {
-					while ((this.element.height() + this.options.container.height()) >= height) {
-						this.element.children('tbody').children('tr').filter(':' + this.dir).remove();
-						i--;
-					}
-					this.options.size = i;
-					if (this.dir == 'first') {
-						this.offset += this.options.autosize - this.options.size;
-					}
-					return true;
-				}
-			}
-			return false
-		},
-
 		_renderWS: function(data, exception) {
-			this.element.children('tbody').empty();
 			var result = this.options.ajaxProcessing(data) || [ 0, [], [] ],
 				rows = result[1] || [],
-				headers = result[2] || [],
-				len = rows.length, rowlen, i, j,
-				automode = this.options.container.find('.pagesize').val() == 'Auto';
+				len = rows.length, i, j,
+				automode = this.options.container.find('.pagesize').val() == 'Auto',
+				oldrows = this.element.children('tbody').children('tr').size(),
+				height = $(window).height();
 
-			if (this.dir == 'first') {
-console.log(this.offset);
-console.log(len);
-console.log(this.options.size);
-console.log(rows);
-//				for (i = len - 1; i >= 0; i--) {
-				for (i = 0; i < len ; i++) {
-					if (this._renderRow(i, rows[49 - i], $(window).height())) {
-						break;
-					}
+			for (i = 0; i < len; i++) {
+				var trow = "<tr>",
+					rowlen = rows[i].length, j;
+				for (j = 0; j < rowlen; j++) {
+					var match = rows[i][j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
+					if (match !== null)
+						trow += '<td ' + match[1] + '="' + match[2] + '">' + match[3] + '</td>';
+					else
+						trow += '<td>' + rows[i][j] + '</td>';
 				}
-			} else {			
-				for (i = 0; i < len; i++) {
-					if (this._renderRow(i, rows[i], $(window).height())) {
-						break;
+				trow += "</tr>";
+				if (this.dir == 'first') {
+					this.element.children('tbody').prepend(trow);
+				} else {
+					this.element.children('tbody').append(trow);
+				}
+			}
+
+			if (automode) {
+				if ((this.element.height() + this.options.container.height()) >= height) {
+					while ((this.element.height() + this.options.container.height()) >= height && oldrows > 0) {
+						this.element.children('tbody').children('tr').filter(this.dir == 'first' ? ':last' : ':first').remove();
+						oldrows--;
+					}
+					while ((this.element.height() + this.options.container.height()) >= height) {
+						this.element.children('tbody').children('tr').filter(':' + this.dir).remove();
+						len--;
 					}
 				}
 			}
+
+			if (this.dir == 'first') {
+				this.offset = (this.offset + this.options.size) - len;
+			} else {
+			}
+			this.options.size = len + oldrows;
+
+			this.element.children('tbody').children('tr').removeClass('odd even');
+			this.element.children('tbody').children('tr').filter(':even').addClass('even');
+			this.element.children('tbody').children('tr').filter(':odd').addClass('odd');
 
 			this.total_rows = result[0];
 			this.total_pages = Math.floor(this.total_rows / this.options.size);
 			if (automode) {
 				this.start_row = this.offset + 1;
-				this.end_row = Math.min(this.start_row + this.options.size, this.total_rows);
+				this.end_row = Math.min(this.start_row + this.options.size, this.total_rows) - 1;
 			} else {
 				this.start_row = this.page * this.options.size + 1;
 				this.end_row = Math.min(this.start_row + (this.options.size - 1), this.total_rows)
