@@ -50,8 +50,8 @@
 			}, this));
 			this.options.container.find('.last').click($.proxy(function() {
 				if (this.page < this.total_pages - 1 || this.offset < this.total_rows) {
-					this.page = this.total_pages - 1;
-					this.offset = this.total_rows - (this.options.container.find('.pagesize').val() == 'Auto' ? this.options.autosize : this.options.size);
+					this.page = this.total_pages;
+					this.offset = (this.options.container.find('.pagesize').val() == 'Auto' ? this.total_rows - this.options.autosize : (this.page * this.options.size));
 					this.dir = 'last';
 					this.clear = true;
 					this._getWS();
@@ -171,6 +171,10 @@
 				oldrows = this.element.children('tbody').children('tr').size(),
 				height = $(window).height(), lastrow;
 
+			if (!automode) {
+				this.element.children('tbody').empty();
+			}
+
 			for (i = 0; i < len; i++) {
 				var trow = "<tr>",
 					rowlen = rows[i].length, j;
@@ -206,13 +210,11 @@
 						len--;
 					}
 				}
+				if (this.dir == 'first') {
+					this.offset = (this.options.autosize + this.offset) - len;
+				}
+				this.options.size = len + oldrows;
 			}
-
-			if (this.dir == 'first') {
-				this.offset = (this.options.autosize + this.offset) - len;
-			} else {
-			}
-			this.options.size = len + oldrows;
 
 			this.element.children('tbody').children('tr').removeClass('odd even');
 			this.element.children('tbody').children('tr').filter(':even').addClass('even');
