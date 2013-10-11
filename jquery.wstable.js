@@ -183,9 +183,8 @@
 				height = $(window).height(), lastrow,
 				oldrows = tbody.children('tr').size();
 
-			if (!automode) {
-				tbody.empty();
-			}
+			tbody.empty();
+			oldrows = 0;
 
 			for (i = 0; i < len; i++) {
 				var trow = "<tr>",
@@ -272,6 +271,8 @@
 						}, this));
 			this.options.container.find('.pagedisplay').text(pager_text);
 			this.element.trigger("updateComplete");
+
+			this.clear = false;
 		},
 
 		_setSortIcons: function() {
