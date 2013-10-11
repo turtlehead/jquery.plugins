@@ -4,6 +4,7 @@
 (function($) {
 	$.widget("acinus.wstable", {
 		options: {
+			parent: this,
 			ws_url: null,
 			ws_msg: null,
 			size: 10,
@@ -40,7 +41,7 @@
 			this.clear = false;
 			this.options.size = this.options.container.find('.pagesize').val();
 
-			this.options.container.find('.first').click($.proxy(function(e) {
+			this.options.container.find('.first').on('click', $.proxy(function(e) {
 				if ($(e.target).hasClass('disabled')) {
 					return;
 				}
@@ -52,7 +53,7 @@
 					this._getWS();
 				}
 			}, this));
-			this.options.container.find('.last').click($.proxy(function(e) {
+			this.options.container.find('.last').on('click', $.proxy(function(e) {
 				if ($(e.target).hasClass('disabled')) {
 					return;
 				}
@@ -64,7 +65,7 @@
 					this._getWS();
 				}
 			}, this));
-			this.options.container.find('.prev').click($.proxy(function(e) {
+			this.options.container.find('.prev').on('click', $.proxy(function(e) {
 				if ($(e.target).hasClass('disabled')) {
 					return;
 				}
@@ -76,7 +77,7 @@
 					this._getWS();
 				}
 			}, this));
-			this.options.container.find('.next').click($.proxy(function(e) {
+			this.options.container.find('.next').on('click', $.proxy(function(e) {
 				if ($(e.target).hasClass('disabled')) {
 					return;
 				}
@@ -88,11 +89,12 @@
 					this._getWS();
 				}
 			}, this));
-			this.options.container.find('.pagesize').change($.proxy(function(e) {
+			this.options.container.find('.pagesize').on('change', $.proxy(function(e) {
 				this.options.size = e.target.value;
 				this._getWS();
 			}, this));
-			this.element.find('tr.header th').click($.proxy(this._onSortTable, this));
+
+			$(this.options.parent).on('click', this.element.find('tr.header th'), $.proxy(this._onSortTable, this));
 
 			this.element.find('tr.filter input').on('search', $.proxy(function() {
 				this.element.children('tbody').empty();
@@ -216,7 +218,8 @@
 						tbody.children('tr').filter(this.dir == 'first' ? ':last' : ':first').remove();
 						oldrows--;
 					}
-					while ((this.element.height() + this.options.container.height()) >= height) {
+//					while ((this.element.height() + this.options.container.height()) >= height) {
+					while (this.options.parent.height() >= height) {
 						tbody.children('tr').filter(':' + this.dir).remove();
 						len--;
 					}
