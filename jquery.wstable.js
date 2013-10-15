@@ -21,8 +21,7 @@
 				var filters = $('<tr class="filter"/>');
 				this.element.find('thead th').each(function(i, v) {
 					$(v).append('<img class="wstable-sort none">');
-					var filter = $('<th>').append('<input type="search">');
-					filters.append(filter);
+					filters.append($('<th>').append('<input type="search">'));
 				});
 				this.element.find('thead').append(filters);
 			}
@@ -41,65 +40,15 @@
 			this.clear = false;
 			this.options.size = this.options.container.find('.pagesize').val();
 
-			this.options.container.find('.first').on('click', $.proxy(function(e) {
-				if ($(e.target).hasClass('disabled')) {
-					return;
-				}
-				if (this.page > 0 || this.offset > 0) {
-					this.page = 0;
-					this.offset = 0;
-					this.dir = 'first';
-					this.clear = true;
-					this._getWS();
-				}
-			}, this));
-			this.options.container.find('.last').on('click', $.proxy(function(e) {
-				if ($(e.target).hasClass('disabled')) {
-					return;
-				}
-				if (this.page < this.total_pages - 1 || this.offset < this.total_rows) {
-					this.page = this.total_pages;
-					this.offset = (this.options.container.find('.pagesize').val() == 'Auto' ? this.total_rows - this.options.autosize : (this.page * this.options.size));
-					this.dir = 'last';
-					this.clear = true;
-					this._getWS();
-				}
-			}, this));
-			this.options.container.find('.prev').on('click', $.proxy(function(e) {
-				if ($(e.target).hasClass('disabled')) {
-					return;
-				}
-				if (this.page > 0 || this.offset > 0) {
-					this.page--;
-					this.offset -= this.options.container.find('.pagesize').val() == 'Auto' ? this.options.autosize : this.options.size;
-					this.dir = 'first';
-					this.clear = false;
-					this._getWS();
-				}
-			}, this));
-			this.options.container.find('.next').on('click', $.proxy(function(e) {
-				if ($(e.target).hasClass('disabled')) {
-					return;
-				}
-				if (this.page < this.total_pages - 1 || this.offset < this.total_rows) {
-					this.page++;
-					this.offset += 1 * this.options.size;
-					this.dir = 'last';
-					this.clear = false;
-					this._getWS();
-				}
-			}, this));
-			this.options.container.find('.pagesize').on('change', $.proxy(function(e) {
-				this.options.size = e.target.value;
-				this._getWS();
-			}, this));
+			this._on(this.element.find('tr.header th'), {'click': '_onSortTable'});
+			this._on(this.element.find('tr.filter input'), {'search': '_onFilter'});
 
-			$(this.options.parent).on('click', this.element.find('tr.header th'), $.proxy(this._onSortTable, this));
-
-			this.element.find('tr.filter input').on('search', $.proxy(function() {
-				this.element.children('tbody').empty();
-				this._getWS();
-			}, this));
+			this._on(this.options.container.find('.first'), {'click': '_onFirstPage'});
+			this._on(this.options.container.find('.last'), {'click': '_onLastPage'});
+			this._on(this.options.container.find('.prev'), {'click': '_onPrevPage'});
+			this._on(this.options.container.find('.next'), {'click': '_onNextPage'});
+			this._on(this.options.container.find('.pagesize'), {'change': '_onPageSize'});
+			this._on(this.options.container.find('.gotopage'), {'change': '_onGotoPage'});
 
 			this._setSortIcons();
 		},
@@ -172,25 +121,16 @@
 		},
 
 		_renderWS: function(data, exception) {
-			var tbody = this.element.children('tbody');
-			if (this.clear) {
-				tbody.empty();
-				this.dir = this.dir == 'first' ? 'last' : 'first';
-			}
-
-			var result = this.options.ajaxProcessing(data) || [ 0, [], [] ],
+			var result = this.options.ajaxProcessing(data) || [ 0, [] ],
 				rows = result[1] || [],
-				len = rows.length, i, j,
-				automode = this.options.container.find('.pagesize').val() == 'Auto',
-				height = $(window).height(), lastrow,
-				oldrows = tbody.children('tr').size();
+				tbody = this.element.children('tbody'),
+				len = rows.length, rowlen, i, j,
+				automode = this.options.container.find('.pagesize').val() == 'Auto';
 
-			tbody.empty();
-			oldrows = 0;
-
+			$(tbody).empty();
 			for (i = 0; i < len; i++) {
-				var trow = "<tr>",
-					rowlen = rows[i].length, j;
+				var trow = "<tr class='"+(i%2==0?"even":"odd")+"'>";
+				rowlen = rows[i].length;
 				for (j = 0; j < rowlen; j++) {
 					var match = rows[i][j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
 					if (match !== null)
@@ -199,42 +139,21 @@
 						trow += '<td>' + rows[i][j] + '</td>';
 				}
 				trow += "</tr>";
-				if (this.dir == 'first') {
-					var newrow = $(trow);
-					if (i == 0) {
-						tbody.prepend(newrow);
-					} else {
-						lastrow.after(newrow);
+				$(tbody).append(trow);
+				if (automode) {
+					if (this.options.parent.outerHeight(true) >= $(window).height()) {
+						while (this.options.parent.outerHeight(true) >= $(window).height()) {
+							tbody.children('tr').filter(':last').remove();
+							i--;
+						}
+						this.options.size = i+1;
+						break;
 					}
-					lastrow = newrow;
-				} else {
-					tbody.append(trow);
 				}
 			}
 
-			if (automode) {
-				if ((this.element.height() + this.options.container.height()) >= height) {
-					while ((this.element.height() + this.options.container.height()) >= height && oldrows > 0) {
-						tbody.children('tr').filter(this.dir == 'first' ? ':last' : ':first').remove();
-						oldrows--;
-					}
-//					while ((this.element.height() + this.options.container.height()) >= height) {
-					while (this.options.parent.height() >= height) {
-						tbody.children('tr').filter(':' + this.dir).remove();
-						len--;
-					}
-				}
-				if (this.dir == 'first') {
-					this.offset = (this.options.autosize + this.offset) - len;
-				}
-				this.options.size = len + oldrows;
-			}
-
-			tbody.children('tr').removeClass('odd even');
-			tbody.children('tr').filter(':even').addClass('even');
-			tbody.children('tr').filter(':odd').addClass('odd');
-
-			var old_total_rows = this.total_rows;
+			var old_total_rows = this.total_rows,
+				old_total_pages = this.total_pages;
 			this.total_rows = result[0];
 			this.total_pages = Math.floor(this.total_rows / this.options.size);
 			if (automode) {
@@ -246,21 +165,30 @@
 			}
 
 			if (this.page == 0) {
-				this.options.container.find('.first').addClass('disabled');
-				this.options.container.find('.prev').addClass('disabled');
+				this.options.container.find('.first').addClass('ui-state-disabled');
+				this.options.container.find('.prev').addClass('ui-state-disabled');
 			} else {
-				this.options.container.find('.first').removeClass('disabled');
-				this.options.container.find('.prev').removeClass('disabled');
+				this.options.container.find('.first').removeClass('ui-state-disabled');
+				this.options.container.find('.prev').removeClass('ui-state-disabled');
 			}
 			if (this.page == this.total_pages || this.total_pages == 1 || this.end_row == this.total_rows) {
-				this.options.container.find('.last').addClass('disabled');
-				this.options.container.find('.next').addClass('disabled');
+				this.options.container.find('.last').addClass('ui-state-disabled');
+				this.options.container.find('.next').addClass('ui-state-disabled');
 			} else {
-				this.options.container.find('.last').removeClass('disabled');
-				this.options.container.find('.next').removeClass('disabled');
+				this.options.container.find('.last').removeClass('ui-state-disabled');
+				this.options.container.find('.next').removeClass('ui-state-disabled');
 			}
+
 			if (old_total_rows != this.total_rows) {
 				this.options.container.find('.pagesize').find('option:contains("All")').val(this.total_rows);
+			}
+
+			if (old_total_pages != this.total_pages) {
+				this.options.container.find('.gotopage').empty();
+				for (i = 0; i < this.total_pages; i++) {
+					this.options.container.find('.gotopage').append(new Option(i+1, i, this.page == i));
+				}
+				this.options.container.find('.gotopage').val(this.page);
 			}
 
 			var pager_text = this.options.pager_msg.replace(/\{(page|filteredRows|filteredPages|totalPages|startRow|endRow|totalRows)\}/gi, $.proxy(function(m){
@@ -286,12 +214,63 @@
 			}, this));
 		},
 
+		_changePage: function() {
+			this._getWS();
+			this.options.container.find('.gotopage').val(this.page);
+		},
+
+		_onFirstPage: function(e) {
+			this.page = 0;
+			this.offset = 0;
+			this._changePage();
+		},
+
+		_onLastPage: function(e) {
+			this.page = this.total_pages;
+			this.offset = this.page * this.options.size;
+			this._changePage();
+		},
+
+		_onPrevPage: function(e) {
+			this.page--;
+			this.offset -= this.options.size;
+			this._changePage();
+		},
+
+		_onNextPage: function(e) {
+			this.page++;
+			this.offset += this.options.size;
+			this._changePage();
+		},
+
+		_onPageSize: function(e) {
+			var size = parseInt($(e.target).val());
+			if (isNaN(size)) {
+				this._changePage();
+				return;
+			}
+			this.total_pages = Math.floor(this.total_rows / this.options.size);
+			this.page = Math.floor((Math.min(this.page, this.total_pages) * this.options.size) / size);
+			this.options.size = size;
+			this.offset = this.page * this.options.size;
+			this._changePage();
+		},
+
+		_onGotoPage: function(e) {
+			this.page = parseInt($(e.target).val());
+			this.offset = this.page * this.options.size;
+			this._changePage();
+		},
+
 		_onSortTable: function(e) {
 			var target = $(e.target).find('img'),
 				index = e.target.cellIndex;
 			if (target.length == 0) {
 				target = $(e.target);
 				index = e.target.parentElement.cellIndex;
+			}
+			if (index === undefined) {
+				return;
 			}
 
 			if (e.ctrlKey) {
@@ -314,6 +293,10 @@
 				this.options.sort_list = [[index, sortdir]];
 				target.removeClass('none').addClass(sortdir == 1 ? 'asc' : 'desc');
 			}
+			this._getWS();
+		},
+
+		_onFilter: function(e) {
 			this._getWS();
 		}
 	});
