@@ -38,7 +38,10 @@
 			this.offset = 0;
 			this.dir = 'last';
 			this.clear = false;
+			this.saveddata = null;
 			this.options.size = this.options.container.find('.pagesize').val();
+
+			this._on(this.element, {'show': '_onShow'});
 
 			this._on(this.element.find('tr.header th'), {'click': '_onSortTable'});
 			this._on(this.element.find('tr.filter input'), {'search': '_onFilter'});
@@ -121,6 +124,10 @@
 		},
 
 		_renderWS: function(data, exception) {
+			if (this.element.is(":hidden")) {
+				this.saveddata = data;
+				return;
+			}
 			var result = this.options.ajaxProcessing(data) || [ 0, [] ],
 				rows = result[1] || [],
 				tbody = this.element.children('tbody'),
@@ -139,16 +146,17 @@
 						trow += '<td>' + rows[i][j] + '</td>';
 				}
 				trow += "</tr>";
-				$(tbody).append(trow);
+
 				if (automode) {
-					if (this.options.parent.outerHeight(true) >= $(window).height()) {
-						while (this.options.parent.outerHeight(true) >= $(window).height()) {
-							tbody.children('tr').filter(':last').remove();
-							i--;
-						}
-						this.options.size = i+1;
+					var tr = $(trow);
+					$(tbody).append(tr);
+					if (this.options.parent.outerHeight(true) + tr.height() >= $(window).height()) {
+						tr.remove();
+						this.options.size = i;
 						break;
 					}
+				} else {
+					$(tbody).append(trow);
 				}
 			}
 
@@ -217,6 +225,13 @@
 		_changePage: function() {
 			this._getWS();
 			this.options.container.find('.gotopage').val(this.page);
+		},
+
+		_onShow: function() {
+			if (this.saveddata != null) {
+				this._renderWS(this.saveddata);
+			}
+			this.saveddata = null;
 		},
 
 		_onFirstPage: function(e) {
