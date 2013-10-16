@@ -13,7 +13,8 @@
 			filter_startsWith: false,
 			filter_ignoreCase: true,
 			sort_list: [[0, 0]],
-			pager_msg: '{startRow} to {endRow} of {totalRows} rows'
+			pager_msg: '{startRow} to {endRow} of {totalRows} rows',
+			process_data: function() {alert('process_data must be implemented');}
 		},
 
 		_create: function() {
@@ -128,7 +129,7 @@
 				this.saveddata = data;
 				return;
 			}
-			var result = this.options.ajaxProcessing(data) || [ 0, [] ],
+			var result = this.options.process_data(data) || [ 0, [] ],
 				rows = result[1] || [],
 				tbody = this.element.children('tbody'),
 				len = rows.length, rowlen, i, j,
