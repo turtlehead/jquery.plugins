@@ -134,6 +134,12 @@
 				len = rows.length, rowlen, i, j,
 				automode = this.options.container.find('.pagesize').val() == 'Auto';
 
+			if (this.offset > result[0]) {
+				this.offset = 0;
+				this._getWS();
+				return;
+			}
+
 			$(tbody).empty();
 			for (i = 0; i < len; i++) {
 				var trow = "<tr class='"+(i%2==0?"even":"odd")+"'>";
