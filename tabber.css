@@ -1,0 +1,23 @@
+#tabs>ul>li {
+	display: inline;
+	list-style-type: none;
+	padding: 0 20px;
+	border: 1px solid black;
+}
+
+#tabs>ul>li:hover {
+	background-color: #446;
+}
+
+#tabs>ul>li>a {
+	text-decoration: none;
+}
+
+#tabs>ul>li>a:link,
+#tabs>ul>li>a:visited {
+	color: #446;
+}
+
+#tabs>ul>li>a:hover {
+	color: #ddf;
+}
