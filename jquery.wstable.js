@@ -174,9 +174,11 @@
 			if (automode) {
 				this.start_row = Math.max(1, this.offset + 1);
 				this.end_row = Math.min(this.start_row + this.options.size - 1, this.total_rows);
+				this.offset = this.start_row - 1;
 			} else {
 				this.start_row = Math.max(1, this.page * this.options.size + 1);
 				this.end_row = Math.min(this.start_row + (this.options.size - 1), this.total_rows)
+				this.offset = this.start_row - 1;
 			}
 
 			if (this.start_row <= 1) {
