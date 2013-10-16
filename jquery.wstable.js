@@ -172,21 +172,21 @@
 			this.total_rows = result[0];
 			this.total_pages = Math.floor(this.total_rows / this.options.size);
 			if (automode) {
-				this.start_row = this.offset + 1;
-				this.end_row = Math.min(this.offset + this.options.size, this.total_rows);
+				this.start_row = Math.max(1, this.offset + 1);
+				this.end_row = Math.min(this.start_row + this.options.size - 1, this.total_rows);
 			} else {
-				this.start_row = this.page * this.options.size + 1;
+				this.start_row = Math.max(1, this.page * this.options.size + 1);
 				this.end_row = Math.min(this.start_row + (this.options.size - 1), this.total_rows)
 			}
 
-			if (this.page == 0) {
+			if (this.start_row <= 1) {
 				this.options.container.find('.first').addClass('ui-state-disabled');
 				this.options.container.find('.prev').addClass('ui-state-disabled');
 			} else {
 				this.options.container.find('.first').removeClass('ui-state-disabled');
 				this.options.container.find('.prev').removeClass('ui-state-disabled');
 			}
-			if (this.page == this.total_pages || this.total_pages == 1 || this.end_row == this.total_rows) {
+			if (this.end_row >= this.total_rows) {
 				this.options.container.find('.last').addClass('ui-state-disabled');
 				this.options.container.find('.next').addClass('ui-state-disabled');
 			} else {
