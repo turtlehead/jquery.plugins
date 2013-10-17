@@ -38,8 +38,8 @@
 			this.page = 0;
 			this.offset = 0;
 			this.dir = 'last';
-			this.clear = false;
 			this.saveddata = null;
+			this.back = false;
 			this.options.size = this.options.container.find('.pagesize').val();
 
 			this._on(this.element, {'show': '_onShow'});
@@ -124,6 +124,22 @@
 			}
 		},
 
+		_buildRow: function(i, row) {
+			var trow = "<tr class='"+(i%2==0?"even":"odd")+"'>",
+				j,
+				rowlen = row.length;
+			for (j = 0; j < rowlen; j++) {
+				var match = row[j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
+				if (match !== null)
+					trow += '<td ' + match[1] + '="' + match[2] + '">' + match[3] + '</td>';
+				else
+					trow += '<td>' + row[j] + '</td>';
+			}
+			trow += "</tr>";
+
+			return trow;
+		},
+
 		_renderWS: function(data, exception) {
 			if (this.element.is(":hidden")) {
 				this.saveddata = data;
@@ -142,28 +158,36 @@
 			}
 
 			$(tbody).empty();
-			for (i = 0; i < len; i++) {
-				var trow = "<tr class='"+(i%2==0?"even":"odd")+"'>";
-				rowlen = rows[i].length;
-				for (j = 0; j < rowlen; j++) {
-					var match = rows[i][j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
-					if (match !== null)
-						trow += '<td ' + match[1] + '="' + match[2] + '">' + match[3] + '</td>';
-					else
-						trow += '<td>' + rows[i][j] + '</td>';
-				}
-				trow += "</tr>";
-
-				if (automode) {
-					var tr = $(trow);
-					$(tbody).append(tr);
-					if (this.options.parent.outerHeight(true) + tr.height() >= $(window).height()) {
-						tr.remove();
-						this.options.size = i;
-						break;
+			if (this.back) {
+				for (i = len - 1; i >= 0; i--) {
+					var trow = this._buildRow(i, rows[i]);
+					if (automode) {
+						var tr = $(trow);
+						$(tbody).prepend(tr);
+						if (this.options.parent.outerHeight(true) + tr.height() >= $(window).height()) {
+							tr.remove();
+							this.options.size = i+2;
+							this.offset = (((this.offset + this.options.autosize) - 1) - this.options.size) + 1;
+							break;
+						}
+					} else {
+						$(tbody).prepend(trow);
 					}
-				} else {
-					$(tbody).append(trow);
+				}
+			} else {
+				for (i = 0; i < len; i++) {
+					var trow = this._buildRow(i, rows[i]);
+					if (automode) {
+						var tr = $(trow);
+						$(tbody).append(tr);
+						if (this.options.parent.outerHeight(true) + tr.height() >= $(window).height()) {
+							tr.remove();
+							this.options.size = i;
+							break;
+						}
+					} else {
+						$(tbody).append(trow);
+					}
 				}
 			}
 
@@ -220,7 +244,7 @@
 			this.options.container.find('.pagedisplay').text(pager_text);
 			this.element.trigger("updateComplete");
 
-			this.clear = false;
+			this.back = false;
 		},
 
 		_setSortIcons: function() {
@@ -257,7 +281,8 @@
 
 		_onPrevPage: function(e) {
 			this.page--;
-			this.offset -= this.options.size;
+			this.offset -= (this.options.container.find('.pagesize').val() == 'Auto') ? this.options.autosize : this.options.size;
+			this.back = true;
 			this._changePage();
 		},
 
