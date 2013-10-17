@@ -21,3 +21,13 @@
 #tabs>ul>li>a:hover {
 	color: #ddf;
 }
+
+#tabs>ul>li.selected-tab {
+	background-color: #446;
+}
+
+#tabs>ul>li.selected-tab>a {
+	color: #ddf;
+	background-color: #446;
+	text-decoration: none;
+}

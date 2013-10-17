@@ -11,7 +11,7 @@
 		},
 
 		_init: function() {
-			this._on(this.element.find('ul li a'), {'click': '_onTabClick'});
+			this._on(this.element.find('ul>li>a'), {'click': '_onTabClick'});
 			this._showActiveTab();
 		},
 
@@ -19,6 +19,9 @@
 			this.element.children('div').not(this.options.opentab).hide();
 			this.element.children(this.options.opentab).show();
 			this.element.children(this.options.opentab).children().trigger('show');
+
+			this.element.find('ul>li').not(this.options.opentab).removeClass('selected-tab');
+			this.element.find('ul>li>a[href="'+this.options.opentab+'"]').parent().addClass('selected-tab');
 		},
 
 		_onTabClick: function(e) {
