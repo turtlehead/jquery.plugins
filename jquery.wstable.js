@@ -166,8 +166,11 @@
 						var tr = $(trow);
 						$(tbody).prepend(tr);
 						if (this.options.parent.outerHeight(true) + tr.height() >= $(window).height()) {
-							tr.remove();
-							this.options.size = (len - 1) - i;
+							while (this.options.parent.outerHeight(true) + tr.height() >= $(window).height()) {
+								tr.remove();
+								i++;
+							}
+							this.options.size = len - i;
 							this.offset = (this.offset + this.options.autosize) - this.options.size;
 							break;
 						}
@@ -182,8 +185,11 @@
 						var tr = $(trow);
 						$(tbody).append(tr);
 						if (this.options.parent.outerHeight(true) + tr.height() >= $(window).height()) {
-							tr.remove();
-							this.options.size = i;
+							while (this.options.parent.outerHeight(true) + tr.height() >= $(window).height()) {
+								tr.remove();
+								i--;
+							}
+							this.options.size = i + 1;
 							break;
 						}
 						if (i == len - 1 && this.offset + this.options.size < result[0]) {
