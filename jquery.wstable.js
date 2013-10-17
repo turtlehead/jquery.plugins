@@ -186,7 +186,7 @@
 							this.options.size = i;
 							break;
 						}
-						if (i == len - 1) {
+						if (i == len - 1 && this.offset + this.options.size < result[0]) {
 							this.options.autosize += this.options.autostep;
 							this._getWS();
 							return;
