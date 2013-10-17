@@ -167,8 +167,8 @@
 						$(tbody).prepend(tr);
 						if (this.options.parent.outerHeight(true) + tr.height() >= $(window).height()) {
 							tr.remove();
-							this.options.size = i+2;
-							this.offset = (((this.offset + this.options.autosize) - 1) - this.options.size) + 1;
+							this.options.size = (len - 1) - i;
+							this.offset = (this.offset + this.options.autosize) - this.options.size;
 							break;
 						}
 					} else {
@@ -189,6 +189,7 @@
 						if (i == len - 1) {
 							this.options.autosize += this.options.autostep;
 							this._getWS();
+							return;
 						}
 					} else {
 						$(tbody).append(trow);
