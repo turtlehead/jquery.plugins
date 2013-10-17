@@ -8,7 +8,8 @@
 			ws_url: null,
 			ws_msg: null,
 			size: 10,
-			autosize: 35,
+			autosize: 30,
+			autostep: 5,
 			filter: true,
 			filter_startsWith: false,
 			filter_ignoreCase: true,
@@ -184,6 +185,10 @@
 							tr.remove();
 							this.options.size = i;
 							break;
+						}
+						if (i == len - 1) {
+							this.options.autosize += this.options.autostep;
+							this._getWS();
 						}
 					} else {
 						$(tbody).append(trow);
