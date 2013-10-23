@@ -6,6 +6,7 @@
 		options: {
 			delay: 4000,
 			control_delay: 3000,
+			auto_thumbname: true,
 			thumb_icon: "img/grid-icon.png",
 			play_icon: "img/control-icon.png",
 			pause_icon: "img/control-pause-icon.png",
@@ -135,10 +136,16 @@
 		},
 
 		_prepareLink: function(i, link) {
+			var thumb;
+			if (this.options.auto_thumbname) {
+				thumb = link.href.replace("image", "thumb") + '&size=80';
+			} else {
+				thumb = $(link)[0].origin + $(link)[0].pathname + $(link).data('thumb') + '&size=80';
+			}
 			var slide = {
 				image      : link.href,
 				title      : link.title,
-				thumb_href : link.href.replace("image", "thumb") + '&size=80'
+				thumb_href : thumb
 			}
 			this.slideshow.push(slide);
 			slide.id = this.slideshow.length - 1;
