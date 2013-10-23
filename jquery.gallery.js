@@ -138,9 +138,13 @@
 		_prepareLink: function(i, link) {
 			var thumb;
 			if (this.options.auto_thumbname) {
-				thumb = link.href.replace("image", "thumb") + '&size=80';
+				thumb = link.href.replace("image", "thumb");
 			} else {
-				thumb = $(link)[0].origin + $(link)[0].pathname + $(link).data('thumb') + '&size=80';
+				if ($(link).data('thumb').charAt(0) == '?') {
+					thumb = $(link)[0].origin + $(link)[0].pathname + $(link).data('thumb');
+				} else {
+					thumb = $(link).data('thumb');
+				}
 			}
 			var slide = {
 				image      : link.href,
