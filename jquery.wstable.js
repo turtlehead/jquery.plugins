@@ -6,6 +6,7 @@
 		options: {
 			parent: this,
 			ws_url: null,
+			ws_protocol: null,
 			ws_msg: null,
 			size: 10,
 			autosize: 30,
@@ -59,7 +60,10 @@
 		},
 
 		_establishWS: function() {
-			this.wsocket = new WebSocket(this.options.ws_url);
+			if (this.options.ws_protocol)
+				this.wsocket = new WebSocket(this.options.ws_url, this.options.ws_protocol);
+			else
+				this.wsocket = new WebSocket(this.options.ws_url);
 			this.wsocket.onmessage = $.proxy(function(msg) {
 				this._renderWS(JSON.parse(msg.data));
 			}, this);
