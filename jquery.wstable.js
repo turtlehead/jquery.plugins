@@ -134,11 +134,15 @@
 				j,
 				rowlen = row.length;
 			for (j = 0; j < rowlen; j++) {
-				var match = row[j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
-				if (match !== null)
-					trow += '<td ' + match[1] + '="' + match[2] + '">' + match[3] + '</td>';
-				else
-					trow += '<td>' + row[j] + '</td>';
+				if (row[j] === undefined) {
+					trow += '<td></td>';
+				} else {
+					var match = row[j].match(/{([\w-]+):([\w\.-]+)}(.*)/);
+					if (match !== null)
+						trow += '<td ' + match[1] + '="' + match[2] + '">' + match[3] + '</td>';
+					else
+						trow += '<td>' + row[j] + '</td>';
+				}
 			}
 			trow += "</tr>";
 
