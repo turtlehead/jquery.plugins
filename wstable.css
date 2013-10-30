@@ -1,0 +1,54 @@
+.wstable input {
+	width: 95%;
+}
+
+.wstable th {
+	background-color: #cce;
+}
+
+.wstable tr {
+	font-family: sans-serif;
+	font-size: .75em;
+}
+
+.wstable tr.even {
+	background-color: #eee;
+}
+
+.wstable tr.odd {
+	background-color: #dde;
+}
+
+.wstable tr:hover {
+	background-color: #eed;
+}
+
+table.wstable {
+	border-collapse: collapse;
+	border: 1px solid #ccc;
+	width: 100%;
+}
+
+img.wstable-sort {
+	vertical-align: middle;
+	padding: 0 5px;
+}
+
+img.wstable-sort.none {
+	content:url("img/black-unsorted.gif");
+}
+
+img.wstable-sort.asc {
+	content:url("img/black-asc.gif");
+}
+
+img.wstable-sort.desc {
+	content:url("img/black-desc.gif");
+}
+
+.wstable-pager img.disabled {
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+	cursor: default;
+}
+
